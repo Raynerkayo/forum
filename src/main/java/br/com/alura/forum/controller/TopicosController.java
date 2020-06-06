@@ -8,6 +8,7 @@ import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -52,28 +53,31 @@ public class TopicosController {
 		URI uri = builder.path("/topicos/{id}").buildAndExpand(topico.getId()).toUri();
 		return ResponseEntity.created(uri).body(new TopicoDto(topico));
 	}
-	
+
 	@GetMapping("/{id}")
 	public DetalhesTopicoDto detalhar(@PathVariable Long id) {
 		Topico topico = topicoRepository.getOne(id);
 		return new DetalhesTopicoDto(topico);
 	}
-	
-	@PutMapping("atualizar/{id}")
+
+	@PutMapping("/atualizar/{id}")
 	@Transactional
-	public ResponseEntity<TopicoDto> atualizar(@PathVariable Long id, @RequestBody @Valid AtualizarTopicoForm topicoForm){
+	public ResponseEntity<TopicoDto> atualizar(@PathVariable Long id,
+			@RequestBody @Valid AtualizarTopicoForm topicoForm) {
 		Topico topico = topicoForm.atualizar(id, topicoRepository);
-		
-		//Entendendo melhor: Ele preenche o topico, aí em cima.
-		//No retorno, passo o topico para TopicoDto, e o TopicoDto, vai
-		//"pegar" só os atributos que o TopicoDto tem. E então, ele retorna isso.
+
+		// Entendendo melhor: Ele preenche o topico, aí em cima.
+		// No retorno, passo o topico para TopicoDto, e o TopicoDto, vai
+		// "pegar" só os atributos que o TopicoDto tem. E então, ele retorna isso.
 		return ResponseEntity.ok(new TopicoDto(topico));
 	}
 
+	@DeleteMapping("/remover/{id}")
+	public ResponseEntity<?> remover(@PathVariable Long id) {
+
+		topicoRepository.deleteById(id);
+
+		return ResponseEntity.ok().build();
+	}
+
 }
-
-
-
-
-
-
