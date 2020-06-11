@@ -7,6 +7,8 @@ import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -44,13 +46,12 @@ public class TopicosController {
 
 	/**
 	 * 
-	 * @param pageable é uma outra forma de fazer a paginação no spring. E deve ser
-	 *                 habilitado o seu módulo em Main: @EnableSpringDataWebSupport.
-	 *                 Em relação ao listar/curso, aqui basta colocar um o objeto e
-	 *                 na url de requisição, o cliente, colocar os parametros em
-	 *                 inglês, que são: page=0, size=5, sort=id ou outro atributo
-	 *                 pelo qual deve ser atualizado. desc, para decrescente. Ou,
-	 *                 asc, para ordenar crescente. page=0&size=5&sort=id,asc
+	 * @param pageable é uma outra forma de fazer a paginação no spring. Em relação
+	 *                 ao listar/curso, aqui basta colocar um o objeto e na url de
+	 *                 requisição, o cliente, colocar os parametros em inglês, que
+	 *                 são: page=0, size=5, sort=id ou outro atributo pelo qual deve
+	 *                 ser atualizado. desc, para decrescente. Ou, asc, para ordenar
+	 *                 crescente. page=0&size=5&sort=id,asc
 	 *                 page=0&size=30&sort=id,asc&sort=dataCriacao,desc pode tbm
 	 *                 ordernar por mais de um campo. É possível tbm fazer no
 	 *                 /listar/curso, mas usando mais código. Caso não venha os
@@ -58,10 +59,20 @@ public class TopicosController {
 	 * 
 	 * @PageableDefault é retornado uma paginação default.
 	 * 
+	 * @Cacheable(value = "listaDeTopicos") isso vai habilitar o uso de cache, e o
+	 *                  value é como se fosse o identificador único desse cache. Se
+	 *                  passar algum parametro, ele verifica se já tem resultado em
+	 *                  cache com esse parametro, senão ele faz a consulta. Se sim,
+	 *                  ele retorna o valor em cache. Mas, é bom mutilizar, em
+	 *                  coisas que raramente são modificadas. Como uma tabela de
+	 *                  estados. Que geralmente (ou nunca) é atualizado. Para evitar
+	 *                  buscar do banco.
+	 * 
 	 * @return topicosDto
 	 * 
 	 */
 	@GetMapping("/listar")
+	@Cacheable(value = "listaDeTopicos")
 	public Page<TopicoDto> topicos(
 			@PageableDefault(sort = "id", direction = Direction.DESC, page = 0, size = 5) Pageable pageable) {
 		// @RequestParam -> Ei, Spring, o parametro dessa requisição get, vai vir na
@@ -92,6 +103,20 @@ public class TopicosController {
 		return TopicoDto.converter(topicos);
 	}
 
+	/**
+	 * 
+	 * @CacheEvict é usado em métodos que eu preciso apagar o cache, pois irá
+	 *             modificar o valor e o cache precisa, quando chamado, ter esses
+	 *             valores totais. value, é para dizer qual cache será apagado.
+	 *             allEntries, para dizer que será apagado do cache. CacheEvict
+	 *             deverá ser usado, a depender das regras de negócio. Geralmente,
+	 *             ao mudar os dados da base, por exemplo. Com inserção, remoção ou
+	 *             atualização.
+	 * 
+	 * @return topicosDto
+	 * 
+	 */
+	@CacheEvict(value = "listaDeTopicos", allEntries = true)
 	@PostMapping("/cadastrar")
 	public ResponseEntity<TopicoDto> cadastar(@RequestBody @Valid TopicoForm topicoForm, UriComponentsBuilder builder) {
 		// @RequestBody -> Ei, Spring, o parametro dessa requisição post, vai vir no
