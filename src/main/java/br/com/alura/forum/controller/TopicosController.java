@@ -1,13 +1,17 @@
 package br.com.alura.forum.controller;
 
 import java.net.URI;
-import java.util.List;
 import java.util.Optional;
 
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,6 +20,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -37,9 +42,53 @@ public class TopicosController {
 	@Autowired
 	private CursoRepository cursoRepository;
 
+	/**
+	 * 
+	 * @param pageable é uma outra forma de fazer a paginação no spring. E deve ser
+	 *                 habilitado o seu módulo em Main: @EnableSpringDataWebSupport.
+	 *                 Em relação ao listar/curso, aqui basta colocar um o objeto e
+	 *                 na url de requisição, o cliente, colocar os parametros em
+	 *                 inglês, que são: page=0, size=5, sort=id ou outro atributo
+	 *                 pelo qual deve ser atualizado. desc, para decrescente. Ou,
+	 *                 asc, para ordenar crescente. page=0&size=5&sort=id,asc
+	 *                 page=0&size=30&sort=id,asc&sort=dataCriacao,desc pode tbm
+	 *                 ordernar por mais de um campo. É possível tbm fazer no
+	 *                 /listar/curso, mas usando mais código. Caso não venha os
+	 *                 parametro de ordenação, podemos colocar o default.
+	 * 
+	 * @PageableDefault é retornado uma paginação default.
+	 * 
+	 * @return topicosDto
+	 * 
+	 */
 	@GetMapping("/listar")
-	public List<TopicoDto> topicos() {
-		List<Topico> topicos = topicoRepository.findAll();
+	public Page<TopicoDto> topicos(
+			@PageableDefault(sort = "id", direction = Direction.DESC, page = 0, size = 5) Pageable pageable) {
+		// @RequestParam -> Ei, Spring, o parametro dessa requisição get, vai vir na
+		// url.
+
+		Page<Topico> topicos = topicoRepository.findAll(pageable);
+		return TopicoDto.converter(topicos);
+	}
+
+	/**
+	 * 
+	 * @param nomeCurso recebe o nome do curso para ser pesquisado.
+	 * @param pagina    a pagina retornada da paginação.
+	 * @param qtd       a quantidade de página a serem retornadas.
+	 * @param ordencao  ordenar por qual campo. Se id, data etc.
+	 * @return topicosDto
+	 * 
+	 */
+	@GetMapping("/listar/curso")
+	public Page<TopicoDto> topicosCurso(@RequestParam String nomeCurso, @RequestParam int pagina, @RequestParam int qtd,
+			@RequestParam String ordenacao) {
+		// @RequestParam -> Ei, Spring, o parametro dessa requisição get, vai vir na
+		// url.
+
+		Pageable pageable = PageRequest.of(pagina, qtd, Direction.ASC, ordenacao);
+
+		Page<Topico> topicos = topicoRepository.findByCurso_Nome(nomeCurso, pageable);
 		return TopicoDto.converter(topicos);
 	}
 
