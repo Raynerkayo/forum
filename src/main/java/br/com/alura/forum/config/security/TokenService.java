@@ -7,6 +7,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import br.com.alura.forum.modelo.Usuario;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 
@@ -53,6 +54,15 @@ public class TokenService {
 			return false;
 		}
 		
+	}
+	
+	public Long getIdUsuario(String token){
+		
+		Claims body = Jwts.parser().setSigningKey(this.secret).parseClaimsJws(token).getBody();
+		
+		//body.getSubject(), pega dentro do corpo do objeto, o subject q tem o id do usuario,
+		//setado no gerarToken().
+		return Long.parseLong(body.getSubject());
 	}
 
 }

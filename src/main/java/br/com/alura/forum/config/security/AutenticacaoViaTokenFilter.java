@@ -7,7 +7,12 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
+
+import br.com.alura.forum.modelo.Usuario;
+import br.com.alura.forum.repository.UsuarioRepository;
 
 
 /**
@@ -22,8 +27,11 @@ public class AutenticacaoViaTokenFilter extends OncePerRequestFilter{
 	//Então, faço a injeção usando o construtor.
 	private TokenService tokenService;
 
-	public AutenticacaoViaTokenFilter(TokenService tokenService) {
+	private UsuarioRepository usuarioRepository;
+	
+	public AutenticacaoViaTokenFilter(TokenService tokenService, UsuarioRepository usuarioRepository) {
 		this.tokenService = tokenService;
+		this.usuarioRepository = usuarioRepository;
 	}
 	
 	@Override
@@ -33,12 +41,28 @@ public class AutenticacaoViaTokenFilter extends OncePerRequestFilter{
 		try {
 			String token = verificarToken(request);
 			boolean valido = tokenService.isValidoToken(token);
-			System.out.println(valido);
+
+			if(valido){
+				autenticarCliente(token);
+			}
+		
 		}catch (Exception e) {
 			
 		}
 		
 		filterChain.doFilter(request, response);
+		
+	}
+
+	private void autenticarCliente(String token) {
+
+		Long idUsuario = tokenService.getIdUsuario(token);
+		
+		Usuario usuario = usuarioRepository.findById(idUsuario).get();
+		
+		UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(usuario, null, usuario.getAuthorities()); 
+
+		SecurityContextHolder.getContext().setAuthentication(authentication);
 		
 	}
 
