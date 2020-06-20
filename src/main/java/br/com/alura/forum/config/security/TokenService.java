@@ -40,4 +40,19 @@ public class TokenService {
 				.compact();
 	}
 
+	public boolean isValidoToken(String token) {
+
+		//parser, pega o token e descompacta para verificar se é o msm.
+		//parseClaimsJws(token), devolve o objeto com as informações dentro do token. 
+		//Se for invalido, manda uma exception.
+		//devolve valido ou n valido.
+		try {
+			Jwts.parser().setSigningKey(this.secret).parseClaimsJws(token);
+			return true;
+		}catch (Exception e) {
+			return false;
+		}
+		
+	}
+
 }
