@@ -18,6 +18,7 @@ public class AutenticacaoViaTokenFilter extends OncePerRequestFilter{
 	private static final String BEARER = "Bearer ";
 	
 	//aqui, não posso usar o autowired, pois o spring não permite nos filter. 
+	//alias, não é um bean gerenciado pelo Spring
 	//Então, faço a injeção usando o construtor.
 	private TokenService tokenService;
 
