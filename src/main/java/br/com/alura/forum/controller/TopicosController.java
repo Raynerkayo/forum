@@ -33,8 +33,10 @@ import br.com.alura.forum.controller.form.TopicoForm;
 import br.com.alura.forum.modelo.Topico;
 import br.com.alura.forum.repository.CursoRepository;
 import br.com.alura.forum.repository.TopicoRepository;
+import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 @RestController
+@EnableSwagger2
 @RequestMapping("/topicos")
 public class TopicosController {
 
